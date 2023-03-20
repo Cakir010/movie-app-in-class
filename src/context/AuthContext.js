@@ -8,38 +8,36 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth";
-import { createContext, useEffect, useState } from "react";
+import React , { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../auth/Firebase";
-import { toastErrorNotify, toastSuccessNotify , toastWarnNotify } from "../helpers/ToastNotify";
+import { auth } from "../auth/firebase";
+import {
+  toastErrorNotify,
+  toastSuccessNotify,
+  toastWarnNotify,
+} from "../helpers/ToastNotify";
 
 export const AuthContext = createContext();
 
 const AuthContextProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(
-    JSON.parse(sessionStorage.getItem('user')) || false
-    );
+    JSON.parse(sessionStorage.getItem("user")) || false
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
     userObserver();
   }, []);
 
-  const createUser = async (email, password , displayName) => {
+  const createUser = async (email, password, displayName) => {
     try {
-
       //!yeni bir kullanıcı için kullanılan firebase metodu
-      let userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(auth.currentUser, {
         displayName: displayName,
-      })
+      });
       navigate("/");
-      toastSuccessNotify("/Registered successfuly!");
-      console.log(userCredential);
+      toastSuccessNotify("Registered successfuly!");
     } catch (error) {
       toastErrorNotify("error.message");
     }
@@ -49,13 +47,14 @@ const AuthContextProvider = ({ children }) => {
     signOut(auth);
   };
 
+  //! Email-passwor ile giriş metodu
   const signIn = async (email, password) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/");
-      toastSuccessNotify("  Logged in successfuly!");
+      toastSuccessNotify("Logged in successfuly!");
     } catch (error) {
-      toastErrorNotify("error.message");
+      toastErrorNotify(error.message);
     }
   };
 
@@ -64,15 +63,14 @@ const AuthContextProvider = ({ children }) => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
         const { email, displayName, photoURL } = user;
-        setCurrentUser(email, displayName, photoURL);
+        setCurrentUser({email, displayName, photoURL});
         sessionStorage.setItem(
-          'user',
-          JSON.stringify({email,displayName,photoURL})
-        )
-        
+          "user",
+          JSON.stringify({ email, displayName, photoURL })
+        );
       } else {
         setCurrentUser(false);
-        sessionStorage.clear()
+        sessionStorage.clear();
         // console.log('logged out')
       }
     });
@@ -116,7 +114,7 @@ const AuthContextProvider = ({ children }) => {
   const values = {
     createUser,
     signIn,
-    signUpProvider, 
+    signUpProvider,
     logOut,
     forgotPassword,
     currentUser,
